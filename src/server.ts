@@ -46,7 +46,7 @@ async function agentclearFetch(path: string, options: any, apiKey?: string) {
 }
 
 // ---------------------------------------------------------------------------
-// MCP Server Definition
+// MCP Server Factory
 // ---------------------------------------------------------------------------
 
 export const createServer = () => {
@@ -132,19 +132,37 @@ app.get("/mcp", (req, res) => {
   });
 });
 
-const server = createServer();
-let transport: SSEServerTransport;
+// Session store: Map<sessionId, transport>
+const sessions = new Map<string, SSEServerTransport>();
 
 app.get("/sse", async (req, res) => {
   console.log("New SSE connection");
-  transport = new SSEServerTransport("/messages", res);
+  
+  // Create a new server instance for this connection
+  const server = createServer();
+  
+  const transport = new SSEServerTransport("/messages", res);
+  
+  // Store session
+  sessions.set(transport.sessionId, transport);
+
+  // Clean up when connection closes
+  res.on("close", () => {
+    console.log(`SSE connection closed: ${transport.sessionId}`);
+    sessions.delete(transport.sessionId);
+  });
+
   await server.connect(transport);
 });
 
 app.post("/messages", async (req, res) => {
+  const sessionId = req.query.sessionId as string;
+  const transport = sessions.get(sessionId);
+
   if (transport) {
     await transport.handlePostMessage(req, res);
   } else {
+    console.log(`Session not found: ${sessionId}`);
     res.status(404).send("Session not found");
   }
 });
