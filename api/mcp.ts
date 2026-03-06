@@ -83,8 +83,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const url = new URL(req.url!, `https://${req.headers.host}`);
 
-  // SSE endpoint: GET /api/mcp?sse=1
-  if (req.method === "GET" && url.searchParams.has("sse")) {
+  // SSE endpoint detection
+  // 1. Check query param (Vercel rewrite or direct)
+  // 2. Check Accept header (standard MCP client)
+  const accept = req.headers.accept || "";
+  const isSse = (req.method === "GET") && (
+    req.query?.sse === "1" || 
+    url.searchParams.get("sse") === "1" ||
+    accept.includes("text/event-stream")
+  );
+
+  if (isSse) {
+    console.log("Starting SSE session");
     const server = createServer();
     const transport = new SSEServerTransport(`/api/mcp`, res as any);
     sessions.set(transport.sessionId, transport);
