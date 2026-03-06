@@ -1,0 +1,14 @@
+{
+  "framework": null,
+  "buildCommand": "npm run build",
+  "outputDirectory": ".",
+  "functions": {
+    "api/mcp.ts": {
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [
+    { "source": "/mcp", "destination": "/api/mcp" },
+    { "source": "/sse", "destination": "/api/mcp?sse=1" }
+  ]
+}

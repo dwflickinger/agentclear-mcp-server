@@ -3,3 +3,4 @@ dist/
 .npmrc
 *.tgz
 .DS_Store
+.vercel
