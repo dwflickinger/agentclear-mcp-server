@@ -115,6 +115,7 @@ export const createServer = () => {
 
 const app = express();
 app.use(cors());
+app.use(express.json()); // Ensure JSON body parsing
 
 // Health check
 app.get("/health", (req, res) => {
@@ -138,15 +139,12 @@ const sessions = new Map<string, SSEServerTransport>();
 app.get("/sse", async (req, res) => {
   console.log("New SSE connection");
   
-  // Create a new server instance for this connection
   const server = createServer();
-  
   const transport = new SSEServerTransport("/messages", res);
   
-  // Store session
+  console.log("Created session:", transport.sessionId);
   sessions.set(transport.sessionId, transport);
 
-  // Clean up when connection closes
   res.on("close", () => {
     console.log(`SSE connection closed: ${transport.sessionId}`);
     sessions.delete(transport.sessionId);
@@ -157,12 +155,14 @@ app.get("/sse", async (req, res) => {
 
 app.post("/messages", async (req, res) => {
   const sessionId = req.query.sessionId as string;
+  console.log(`POST /messages sessionId=${sessionId}`);
+  
   const transport = sessions.get(sessionId);
 
   if (transport) {
     await transport.handlePostMessage(req, res);
   } else {
-    console.log(`Session not found: ${sessionId}`);
+    console.log(`Session not found: ${sessionId}. Active sessions: ${sessions.size}`);
     res.status(404).send("Session not found");
   }
 });
