@@ -54,14 +54,14 @@ async function agentclearFetch(path: string, options: any, apiKey?: string) {
 
 export const createServer = () => {
   const server = new McpServer({
-    name: "agentclear",
+    name: "AgentClear — API Marketplace for AI Agents",
     version: "0.3.0",
   });
 
   server.tool(
-    "discover",
+    "discover_services",
     {
-      query: z.string().describe("Natural language API search"),
+      query: z.string().describe("Search for paid API services (e.g. 'stock quotes', 'weather data', 'email verification')"),
       limit: z.number().optional().default(5),
     },
     async ({ query, limit }) => {
@@ -78,10 +78,10 @@ export const createServer = () => {
   );
 
   server.tool(
-    "call",
+    "call_service",
     {
-      service_id: z.string().describe("Service ID from discover"),
-      payload: z.any().describe("JSON payload"),
+      service_id: z.string().describe("Service ID returned from discover_services"),
+      payload: z.any().describe("JSON request payload for the API service"),
     },
     async ({ service_id, payload }) => {
       const result = await agentclearFetch(
