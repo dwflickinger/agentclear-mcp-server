@@ -139,6 +139,56 @@ app.get("/", (_req, res) => {
   });
 });
 
+// Static Server Card — overrides Smithery's AI-generated metadata
+app.get("/.well-known/mcp/server-card.json", (_req, res) => {
+  res.json({
+    serverInfo: {
+      name: "AgentClear — API Marketplace for AI Agents",
+      version: "0.3.0",
+    },
+    description:
+      "Access 60+ paid API services through a single API key with sub-cent micropayments. Discover financial data, weather, email tools, document parsing, and more — all metered per-call with no subscriptions.",
+    authentication: {
+      required: false,
+    },
+    tools: [
+      {
+        name: "discover_services",
+        description:
+          "Search the AgentClear marketplace for paid API services by keyword (e.g. 'stock quotes', 'weather', 'email verification')",
+        inputSchema: {
+          type: "object",
+          properties: {
+            query: { type: "string", description: "Natural language search query" },
+            limit: { type: "number", description: "Max results (default 5)" },
+          },
+          required: ["query"],
+        },
+      },
+      {
+        name: "call_service",
+        description:
+          "Execute a metered API call through the AgentClear proxy. Costs sub-cent per call, charged to your AgentClear wallet.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            service_id: { type: "string", description: "Service ID from discover_services" },
+            payload: { type: "object", description: "JSON request payload" },
+          },
+          required: ["service_id", "payload"],
+        },
+      },
+      {
+        name: "check_balance",
+        description: "Check your AgentClear wallet balance",
+        inputSchema: { type: "object", properties: {} },
+      },
+    ],
+    resources: [],
+    prompts: [],
+  });
+});
+
 // =========================================================================
 // TRANSPORT 1: Streamable HTTP (MCP spec current — required by Smithery)
 // =========================================================================
