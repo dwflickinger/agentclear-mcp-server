@@ -109,6 +109,62 @@ export const createServer = () => {
     }
   );
 
+  // -----------------------------------------------------------------------
+  // Prompts — drive engagement on Smithery
+  // -----------------------------------------------------------------------
+
+  server.prompt(
+    "find-api",
+    {
+      use_case: z.string().describe("What you need an API for (e.g. 'stock prices', 'send email', 'verify phone number')"),
+    },
+    ({ use_case }) => ({
+      messages: [
+        {
+          role: "user" as const,
+          content: {
+            type: "text" as const,
+            text: `I need an API for: ${use_case}\n\nUse the discover_services tool to find the best matching APIs on AgentClear. For each result, show the name, what it does, and the price per call. Then recommend which one to use and show an example call_service invocation.`,
+          },
+        },
+      ],
+    })
+  );
+
+  server.prompt(
+    "explore-marketplace",
+    {},
+    () => ({
+      messages: [
+        {
+          role: "user" as const,
+          content: {
+            type: "text" as const,
+            text: `Show me what's available on the AgentClear API marketplace. Use discover_services to search for popular categories:\n1. Financial data (stocks, crypto)\n2. Communication (email, SMS)\n3. Security (URL scanning, WHOIS)\n4. Business intelligence\n5. AI/ML services\n\nFor each category, show the top result with name, description, and price. Then check my balance with check_balance.`,
+          },
+        },
+      ],
+    })
+  );
+
+  server.prompt(
+    "quick-api-call",
+    {
+      query: z.string().describe("What data or action you need"),
+    },
+    ({ query }) => ({
+      messages: [
+        {
+          role: "user" as const,
+          content: {
+            type: "text" as const,
+            text: `I need: ${query}\n\nFirst use discover_services to find the right API, then immediately call it with call_service. Show me the results. If it costs money, tell me the price before calling.`,
+          },
+        },
+      ],
+    })
+  );
+
   return server;
 };
 
@@ -185,7 +241,23 @@ app.get("/.well-known/mcp/server-card.json", (_req, res) => {
       },
     ],
     resources: [],
-    prompts: [],
+    prompts: [
+      {
+        name: "find-api",
+        description: "Find the perfect API for any use case — stocks, email, security, and more",
+        arguments: [{ name: "use_case", description: "What you need an API for", required: true }],
+      },
+      {
+        name: "explore-marketplace",
+        description: "Browse the full AgentClear marketplace by category",
+        arguments: [],
+      },
+      {
+        name: "quick-api-call",
+        description: "Find and call an API in one shot — just describe what you need",
+        arguments: [{ name: "query", description: "What data or action you need", required: true }],
+      },
+    ],
   });
 });
 
